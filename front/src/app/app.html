@@ -1,0 +1,144 @@
+<div class="container">
+  <header>
+    <h1>Dashboard de Canciones (Serverless API)</h1>
+    <p>Conectado a Vercel Functions & Firebase Firestore</p>
+  </header>
+
+  <!-- Panel de Control: Buscador y Filtros -->
+  <section class="controls">
+    <!-- Filtros por Límite y Plataforma -->
+    <div class="card-filter">
+      <h3>Filtros de Listado</h3>
+      <div class="filter-group">
+        <label>
+          Cantidad:
+          <select [(ngModel)]="limite" (change)="cargarCanciones()">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+            <option [value]="200">200</option>
+            <option [value]="500">500</option>
+            <option [value]="1000">1000</option>
+          </select>
+        </label>
+
+        <label>
+          Plataforma:
+          <select [(ngModel)]="plataforma" (change)="cargarCanciones()">
+            <option value="">Todas</option>
+            <option value="web player">Web Player</option>
+            <option value="windows">Windows</option>
+            <option value="android">Android</option>
+            <option value="iOS">iOS</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="platform-summary">
+      <h3>Distribución por plataforma</h3>
+      <div
+        class="chart-content"
+        [class.chart-pending]="cargando || canciones.length === 0"
+        [attr.aria-hidden]="cargando || canciones.length === 0 ? 'true' : null"
+      >
+        <div class="chart-canvas">
+          <canvas #graficoPlataformas aria-hidden="true"></canvas>
+        </div>
+        <ul
+          class="chart-legend"
+          aria-label="Distribución de plataformas en los registros mostrados"
+        >
+          <li *ngFor="let item of distribucion">
+            <span
+              class="legend-color"
+              [style.background-color]="item.color"
+              aria-hidden="true"
+            ></span>
+            <span class="legend-name">{{ item.plataforma }}</span>
+            <span>{{ item.cantidad }} · {{ item.porcentaje | number: '1.0-1' }}%</span>
+          </li>
+        </ul>
+      </div>
+      <p *ngIf="cargando" class="chart-status">Cargando distribución...</p>
+      <p *ngIf="!cargando && canciones.length === 0" class="chart-status">
+        No hay registros para mostrar.
+      </p>
+    </div>
+  </section>
+
+  <!-- Mensajes de Estado -->
+  <div *ngIf="cargando" class="loading">⏳ Consultando Serverless Function...</div>
+  <div *ngIf="mensajeError" class="alert-error">⚠️ {{ mensajeError }}</div>
+
+  <!-- Tabla de Canciones -->
+  <section class="table-section" *ngIf="canciones.length > 0">
+    <h2>
+      Lista de Canciones ({{ canciones.length }} registros<span *ngIf="totalRegistros !== null">
+        - {{ totalRegistros | number }} en total</span
+      >)
+    </h2>
+    <div class="table-scroll">
+      <table class="song-table">
+        <thead>
+          <tr>
+            <th>Artista</th>
+            <th>Canción</th>
+            <th>Plataforma</th>
+            <th>ms Played</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cancion of canciones">
+            <td>{{ cancion.artist_name || 'N/A' }}</td>
+            <td>{{ cancion.track_name || 'N/A' }}</td>
+            <td>
+              <span class="badge">{{ cancion.platform || 'General' }}</span>
+            </td>
+            <td>{{ cancion.ms_played | number }}</td>
+            <td>
+              <button
+                type="button"
+                class="detail-button"
+                (click)="verDetalle(cancion.id, dialogoDetalle)"
+                [attr.aria-label]="'Ver detalle de ' + (cancion.track_name || cancion.id)"
+                title="Ver detalle"
+              >
+                🔍
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog
+    #dialogoDetalle
+    class="detail-dialog"
+    aria-labelledby="titulo-detalle"
+    (close)="cerrarDetalle()"
+  >
+    <div class="dialog-header">
+      <h2 id="titulo-detalle">Detalle de la canción</h2>
+      <button
+        type="button"
+        class="close-button"
+        aria-label="Cerrar detalle"
+        title="Cerrar"
+        (click)="dialogoDetalle.close()"
+      >
+        ×
+      </button>
+    </div>
+    <p *ngIf="cargandoDetalle" role="status">Cargando detalle...</p>
+    <p *ngIf="errorDetalle" class="alert-error" role="alert">{{ errorDetalle }}</p>
+    <dl *ngIf="cancionEncontrada" class="detail-list">
+      <div *ngFor="let campo of cancionEncontrada | keyvalue">
+        <dt>{{ campo.key }}</dt>
+        <dd>{{ mostrarValor(campo.value) }}</dd>
+      </div>
+    </dl>
+  </dialog>
+</div>

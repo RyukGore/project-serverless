@@ -1,0 +1,17 @@
+{
+  "name": "proyecto-serverless",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@vercel/node": "^30.0.0",
+    "firebase-admin": "^14.5.0"
+  }
+}
